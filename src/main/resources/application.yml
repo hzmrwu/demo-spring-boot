@@ -25,6 +25,10 @@ spring:
           enabled: true
           statement-close-after-log-enabled: false
 
+  rabbitmq:
+    # 开启生产者确认
+    publisher-confirm-type: correlated
+
 logging:
   level:
     druid:
