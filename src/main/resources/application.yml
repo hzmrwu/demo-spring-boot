@@ -29,6 +29,12 @@ spring:
     # 开启生产者确认
     publisher-confirm-type: correlated
 
+  redis:
+    host: 123.207.26.73
+    port: 6379
+    password: redisWmk87383995
+    database: 0
+
 logging:
   level:
     druid:
