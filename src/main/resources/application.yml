@@ -2,41 +2,88 @@ server:
   port: 8088
 
 spring:
-  data:
-    elasticsearch:
-      cluster-name=my-application: my-es
-      cluster-nodes: 127.0.0.1:9300
+#  data:
+#    elasticsearch:
+#      cluster-name=my-application: my-es
+#      cluster-nodes: 127.0.0.1:9300
 
-  datasource:
-    driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf-8
-    username: root
-    password: 123456
+#  datasource:
+#    driver-class-name: com.mysql.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf-8
+#    username: root
+#    password: 123456
 
-    druid:
-      filters: stat,slf4j
-      # 启动监控页面，考虑安全问题，默认是关闭的，按需开启。http://127.0.0.1:8080/druid
-      stat-view-servlet:
-        enabled: true
-      web-stat-filter:
-        enabled: true
-      filter:
-        stat:
-          enabled: true
-        # 打印可执行SQL
-        slf4j:
-          enabled: true
-          statement-close-after-log-enabled: false
+#    druid:
+#      filters: stat,slf4j
+#      # 启动监控页面，考虑安全问题，默认是关闭的，按需开启。http://127.0.0.1:8080/druid
+#      stat-view-servlet:
+#        enabled: true
+#      web-stat-filter:
+#        enabled: true
+#      filter:
+#        stat:
+#          enabled: true
+#        # 打印可执行SQL
+#        slf4j:
+#          enabled: true
+#          statement-close-after-log-enabled: false
 
-  rabbitmq:
-    # 开启生产者确认
-    publisher-confirm-type: correlated
+#  rabbitmq:
+#    # 开启生产者确认
+#    publisher-confirm-type: correlated
 
-  redis:
-    host: 123.207.26.73
-    port: 6379
-    password: redisWmk87383995
-    database: 0
+#  redis:
+#    host: 123.207.26.73
+#    port: 6379
+#    password: redisWmk87383995
+#    database: 0
+
+  shardingsphere:
+    datasource:
+      #数据源名称，多数据源以逗号分隔
+      names: ds0,ds1
+      ds0:
+        driver-class-name: com.mysql.jdbc.Driver
+        password: 'wmk87383995'
+        #数据库连接池类名称
+        type: com.alibaba.druid.pool.DruidDataSource
+        url: jdbc:mysql://123.207.26.73:3306/ds0
+        username: root
+      ds1:
+        driver-class-name: com.mysql.jdbc.Driver
+        password: 'wmk87383995'
+        type: com.alibaba.druid.pool.DruidDataSource
+        url: jdbc:mysql://123.207.26.73:3306/ds1
+        username: root
+    sharding:
+      #默认数据库分片策略，同分库策略
+      default-database-strategy:
+        inline:
+          #分片算法行表达式，需符合groovy语法
+          algorithm-expression: ds$->{user_id % 2}
+          #分片列名称
+          sharding-column: user_id
+      tables:
+        #logic-table-name
+        t_order:
+          #由数据源名 + 表名组成，以小数点分隔。多个表以逗号分隔，支持inline表达式。缺省表示使用已知数据源与逻辑表名称生成数据节点，用于广播表（即每个库中都需要一个同样的表用于关联查询，多为字典表）或只分库不分表且所有库的表结构完全一致的情况
+          actual-data-nodes: ds$->{0..1}.t_order_$->{0..2}
+          #分表策略
+          table-strategy:
+            inline:
+              algorithm-expression: t_order_$->{order_id % 3}
+              sharding-column: order_id
+        t_order_item:
+          actual-data-nodes: ds$->{0..1}.t_order_item_$->{0..2}
+          table-strategy:
+            inline:
+              algorithm-expression: t_order_item_$->{order_id % 3}
+              sharding-column: order_id
+      #绑定表关系,避免出现笛卡尔积查询
+      binding-tables: t_order,t_order_item
+    props:
+      sql:
+        show: true
 
 logging:
   level:
