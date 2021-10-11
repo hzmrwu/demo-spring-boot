@@ -85,8 +85,20 @@ spring:
       sql:
         show: true
 
+  http:
+    multipart:
+      enabled: true
+      maxFileSize: 10MB
+      maxRequestSize: 10MB
+      file-size-threshold: 10MB
+
 logging:
   level:
     druid:
       sql:
         Statement: DEBUG
+
+#自动配置注入
+mk:
+  server:
+    port: 9909
